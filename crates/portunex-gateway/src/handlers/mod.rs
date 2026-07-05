@@ -4,3 +4,4 @@ pub mod api_key;
 pub mod billing;
 pub mod admin;
 pub mod models;
+pub mod subscription;

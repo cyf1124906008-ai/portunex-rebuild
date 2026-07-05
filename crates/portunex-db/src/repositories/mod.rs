@@ -5,3 +5,5 @@ pub mod redemption;
 pub mod points;
 pub mod provider;
 pub mod model_alias;
+pub mod subscription;
+pub mod usage;
