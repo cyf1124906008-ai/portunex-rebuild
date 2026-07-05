@@ -1,3 +1,24 @@
-// portunex-db/src/repositories/model_alias.rs
-// [重建骨架] 该模块在原二进制中存在(路径痕迹),逻辑不可见,待实现。
-// TODO: 按 RECONSTRUCTION_BLUEPRINT.md 中本模块的职责与 API 契约填充。
+//! 模型别名仓库(供 /v1/models 与路由解析)。
+use crate::entities::model_aliases::ModelAliases;
+use sqlx::PgPool;
+
+pub struct ModelAliasRepo;
+impl ModelAliasRepo {
+    pub async fn list(pool: &PgPool) -> sqlx::Result<Vec<ModelAliases>> {
+        sqlx::query_as::<_, ModelAliases>("SELECT * FROM model_aliases ORDER BY priority NULLS LAST, alias")
+            .fetch_all(pool).await
+    }
+    pub async fn create(pool: &PgPool, id: i64, alias: &str, kind: &str, upstream_model: Option<&str>, priority: i32) -> sqlx::Result<()> {
+        sqlx::query(
+            "INSERT INTO model_aliases (id, alias, kind, upstream_model, priority, created_at, updated_at) \
+             VALUES ($1,$2,$3,$4,$5, now(), now())",
+        )
+        .bind(id).bind(alias).bind(kind).bind(upstream_model).bind(priority)
+        .execute(pool).await?;
+        Ok(())
+    }
+    pub async fn delete(pool: &PgPool, id: i64) -> sqlx::Result<u64> {
+        let r = sqlx::query("DELETE FROM model_aliases WHERE id = $1").bind(id).execute(pool).await?;
+        Ok(r.rows_affected())
+    }
+}

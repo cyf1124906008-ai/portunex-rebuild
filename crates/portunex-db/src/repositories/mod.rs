@@ -1,3 +1,7 @@
-//! 数据仓库层。已实现:user、api_key。其余按 BLUEPRINT 补。
+//! 数据仓库层。
 pub mod user;
 pub mod api_key;
+pub mod redemption;
+pub mod points;
+pub mod provider;
+pub mod model_alias;

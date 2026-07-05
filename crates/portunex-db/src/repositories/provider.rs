@@ -1,3 +1,26 @@
-// portunex-db/src/repositories/provider.rs
-// [重建骨架] 该模块在原二进制中存在(路径痕迹),逻辑不可见,待实现。
-// TODO: 按 RECONSTRUCTION_BLUEPRINT.md 中本模块的职责与 API 契约填充。
+//! 上游 provider 池仓库。
+use crate::entities::providers::Providers;
+use sqlx::PgPool;
+
+pub struct ProviderRepo;
+impl ProviderRepo {
+    pub async fn list(pool: &PgPool) -> sqlx::Result<Vec<Providers>> {
+        sqlx::query_as::<_, Providers>(
+            "SELECT * FROM providers WHERE deleted_at IS NULL ORDER BY id",
+        ).fetch_all(pool).await
+    }
+    pub async fn create(pool: &PgPool, id: i64, kind: &str, name: &str, base_url: Option<&str>, weight: i32) -> sqlx::Result<()> {
+        sqlx::query(
+            "INSERT INTO providers (id, kind, name, base_url, weight, healthy, created_at, updated_at) \
+             VALUES ($1,$2,$3,$4,$5, true, now(), now())",
+        )
+        .bind(id).bind(kind).bind(name).bind(base_url).bind(weight)
+        .execute(pool).await?;
+        Ok(())
+    }
+    pub async fn soft_delete(pool: &PgPool, id: i64) -> sqlx::Result<u64> {
+        let r = sqlx::query("UPDATE providers SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL")
+            .bind(id).execute(pool).await?;
+        Ok(r.rows_affected())
+    }
+}

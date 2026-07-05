@@ -1,3 +1,6 @@
-//! 路由聚合。已实现:auth、user(含 api-keys)。
+//! 路由聚合。
 pub mod auth;
 pub mod user;
+pub mod billing;
+pub mod admin;
+pub mod models;
