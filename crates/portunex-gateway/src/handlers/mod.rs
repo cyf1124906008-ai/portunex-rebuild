@@ -1,2 +1,4 @@
-//! 业务 handler。已实现:auth。其余按 BLUEPRINT 补。
+//! 业务 handler。已实现:auth、user、api_key。
 pub mod auth;
+pub mod user;
+pub mod api_key;

@@ -40,7 +40,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1beta/{*rest}", post(not_impl))
         // ── 鉴权 / 用户面 ──(auth/register、auth/login 已实现)
         .merge(crate::routes::auth::routes())
-        .route("/api-keys", get(not_impl).post(not_impl))
+        // ── 用户面(需 Bearer):/me、/api-keys(已实现)──
+        .merge(crate::routes::user::routes())
         .route("/subscriptions", get(not_impl))
         .route("/usage", get(not_impl))
         .route("/points/stats", get(not_impl))
