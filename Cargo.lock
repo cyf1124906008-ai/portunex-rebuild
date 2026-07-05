@@ -1558,6 +1558,7 @@ dependencies = [
  "chrono",
  "config",
  "jsonwebtoken",
+ "portunex-db",
  "rand 0.8.6",
  "rust_decimal",
  "serde",

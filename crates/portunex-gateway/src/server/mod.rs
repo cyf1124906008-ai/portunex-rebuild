@@ -38,8 +38,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/messages/count_tokens", post(not_impl))
         // ── Gemini ──
         .route("/v1beta/{*rest}", post(not_impl))
-        // ── 鉴权 / 用户面 ──
-        .route("/auth/{*rest}", post(not_impl))
+        // ── 鉴权 / 用户面 ──(auth/register、auth/login 已实现)
+        .merge(crate::routes::auth::routes())
         .route("/api-keys", get(not_impl).post(not_impl))
         .route("/subscriptions", get(not_impl))
         .route("/usage", get(not_impl))

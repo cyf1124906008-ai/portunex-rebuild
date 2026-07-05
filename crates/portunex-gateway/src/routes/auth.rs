@@ -1,3 +1,10 @@
-// portunex-gateway/src/routes/auth.rs
-// [重建骨架] 该模块在原二进制中存在(路径痕迹),逻辑不可见,待实现。
-// TODO: 按 RECONSTRUCTION_BLUEPRINT.md 中本模块的职责与 API 契约填充。
+//! /auth 路由。
+use axum::{routing::post, Router};
+use crate::handlers::auth;
+use crate::state::AppState;
+
+pub fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/auth/register", post(auth::register))
+        .route("/auth/login", post(auth::login))
+}

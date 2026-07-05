@@ -26,3 +26,4 @@ rand = { workspace = true }
 config = { workspace = true }
 jsonwebtoken = { workspace = true }
 uuid = { workspace = true }
+portunex-db = { path = "../portunex-db" }

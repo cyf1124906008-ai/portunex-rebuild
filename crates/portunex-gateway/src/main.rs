@@ -4,8 +4,12 @@
 //! 调度算法、OIDC 签发、计费、WebSocket 上游池等。
 
 mod config;
+mod handlers;
+mod middleware;
+mod routes;
 mod server;
 mod state;
+mod util;
 
 use anyhow::Context;
 use sqlx::postgres::PgPoolOptions;
