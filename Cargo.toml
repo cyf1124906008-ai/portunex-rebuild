@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/portunex-gateway",
+    "crates/portunex-core",
+    "crates/portunex-db",
+    "crates/portunex-upstream",
+    "crates/portunex-clickhouse",
+    "crates/portunex-redis",
+    "crates/portunex-logging",
+]
+
+# 说明:这是「重建」workspace,结构照原二进制的 197 个模块路径还原。
+# portunex-gateway 是可运行的主程序(本 Phase 1 已实现:配置 + 迁移 + /health /ready + 路由骨架 + admin 播种)。
+# 其余 6 个库 crate 为占位(lib.rs 有效可编译),内部子模块为 orphan 骨架,按 RECONSTRUCTION_BLUEPRINT.md 逐步接入。
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.8", features = ["macros", "ws"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "compression-gzip", "trace"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "rust_decimal", "json", "migrate"] }
+anyhow = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1", features = ["serde"] }
+argon2 = "0.5"
+rand = "0.8"
+config = "0.14"
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+jsonwebtoken = "9"
+uuid = { version = "1", features = ["v4", "serde"] }
