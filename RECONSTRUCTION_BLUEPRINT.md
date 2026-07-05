@@ -125,3 +125,19 @@ oidc-clients,pricing}`、`auth.{magic,oauth.callback}`、`oidc.authorize`。
 5. **调度器 services**(sticky/spill/p2c…)+ provider 后台。
 6. 计费(points/orders/subscriptions/redemption)+ 支付渠道。
 7. OIDC 提供方。8. ClickHouse 日志 + Redis 缓存。9. 前端。
+
+---
+
+## 已完成阶段(实跑验证,均已提交推送)
+
+- **P1 核心**:配置 / 迁移(33表)/ 首启播种 admin / `/health` `/ready`(还原)。
+- **P2 数据层**:32 实体(schema 精确生成)+ repositories。
+- **P3 认证**:`/auth/register` `/auth/login`(argon2 + 会话 token)+ Bearer/Admin 提取器。
+- **P4 用户面**:`/me`、API Key 增删查(`/api-keys*`)。
+- **P5 计费+后台**:兑换码→积分(`/redeem`)、`/admin/*` CRUD(users/providers/model-aliases/codes)、RBAC、`/v1/models` 真实数据。
+- **P6 订阅**:`/subscriptions`(积分购买/到期)、`/points/stats`、`/usage`、套餐管理。
+
+### 剩余(需你的凭据或属大件,未做)
+- **上游转发**(P4 蓝图第 3-5 步):`/messages` `/v1/chat/completions` 等 + Claude/OpenAI/Gemini/Antigravity 的 OAuth + translators + 调度器。**要真验证必须用你的真实订阅/OAuth,会消耗额度**,我这边无法测。
+- OIDC 提供方签发、ClickHouse/Redis 接入、前端。
+- 已知 TODO:subscribe 的扣分+建订阅应包进单事务(当前分两步)。
