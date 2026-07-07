@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Portunex 控制台（重建版）</title>
+<style>
+  :root { --bg:#0a0a0a; --panel:#141414; --panel2:#1c1c1c; --line:#262626; --fg:#e6e6e6; --mut:#8a8a8a; --acc:#6d8cff; --ok:#3ecf8e; --err:#ff6b6b; --warn:#f5b544; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif; }
+  a { color:var(--acc); }
+  header { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:5; }
+  header .logo { font-weight:700; letter-spacing:.5px; font-size:16px; }
+  header .logo span { color:var(--acc); }
+  header .grow { flex:1; }
+  header input { width:230px; }
+  .wrap { max-width:960px; margin:0 auto; padding:20px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card h3 { margin:0 0 12px; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--mut); }
+  label { display:block; font-size:12px; color:var(--mut); margin:8px 0 4px; }
+  input, select { width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--fg); border-radius:8px; padding:8px 10px; font-size:13px; }
+  input:focus, select:focus { outline:none; border-color:var(--acc); }
+  button { background:var(--acc); color:#fff; border:0; border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; font-weight:600; }
+  button:hover { filter:brightness(1.1); } button.ghost { background:var(--panel2); border:1px solid var(--line); color:var(--fg); font-weight:500; }
+  button.danger { background:transparent; border:1px solid var(--err); color:var(--err); }
+  button.sm { padding:4px 10px; font-size:12px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .metric { font-size:26px; font-weight:700; } .metric small { font-size:12px; color:var(--mut); font-weight:400; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--mut); font-weight:500; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:20px; font-size:11px; border:1px solid var(--line); }
+  .pill.ok { color:var(--ok); border-color:#1e4d38; } .pill.off { color:var(--mut); }
+  .pill.admin { color:var(--warn); border-color:#4d3d1a; }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--line); padding:10px 16px; border-radius:8px; opacity:0; transition:.3s; pointer-events:none; z-index:20; }
+  #toast.show { opacity:1; } #toast.err { border-color:var(--err); } #toast.ok { border-color:var(--ok); }
+  .muted { color:var(--mut); } .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .hidden { display:none !important; }
+  .tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .tabs button { background:var(--panel2); border:1px solid var(--line); color:var(--mut); font-weight:500; }
+  .tabs button.active { background:var(--acc); color:#fff; border-color:var(--acc); }
+  pre { background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:11px; max-height:180px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Portun<span>e</span>x <span class="muted" style="font-size:11px">重建版控制台</span></div>
+  <div class="grow"></div>
+  <label style="margin:0" title="后端地址"></label>
+  <input id="api" value="http://localhost:8091" title="后端 API 地址" />
+  <span id="who" class="muted"></span>
+  <button id="logout" class="ghost sm hidden">退出</button>
+</header>
+
+<div class="wrap">
+  <!-- 未登录 -->
+  <div id="auth" class="grid">
+    <div class="card">
+      <h3>登录</h3>
+      <label>邮箱</label><input id="li_email" value="admin@portunex.local" />
+      <label>密码</label><input id="li_pw" type="password" placeholder="密码" />
+      <div style="margin-top:12px"><button onclick="login()">登录</button></div>
+    </div>
+    <div class="card">
+      <h3>注册</h3>
+      <label>邮箱</label><input id="rg_email" placeholder="you@example.com" />
+      <label>密码</label><input id="rg_pw" type="password" placeholder="至少 6 位" />
+      <div style="margin-top:12px"><button class="ghost" onclick="register()">注册</button></div>
+    </div>
+  </div>
+
+  <!-- 已登录 -->
+  <div id="app" class="hidden">
+    <div class="tabs" id="tabs"></div>
+
+    <!-- 概览 -->
+    <div data-tab="overview" class="grid">
+      <div class="card"><h3>积分余额</h3><div class="metric" id="m_points">—</div></div>
+      <div class="card"><h3>账号</h3><div id="m_acct" class="mono"></div></div>
+      <div class="card"><h3>兑换码充值</h3>
+        <label>兑换码</label><input id="rd_code" placeholder="RC-xxxx" />
+        <div style="margin-top:12px"><button onclick="redeem()">兑换</button></div>
+      </div>
+      <div class="card" style="grid-column:1/-1"><h3>我的订阅</h3><div id="m_subs" class="muted">加载中…</div></div>
+    </div>
+
+    <!-- API Keys -->
+    <div data-tab="keys" class="hidden">
+      <div class="card">
+        <h3>API Keys</h3>
+        <div class="row"><input id="k_name" placeholder="key 名称" style="max-width:200px" /><button onclick="createKey()">新建</button></div>
+        <div id="k_new" class="mono" style="margin-top:10px"></div>
+        <table style="margin-top:12px"><thead><tr><th>名称</th><th>前缀</th><th>状态</th><th></th></tr></thead><tbody id="k_list"></tbody></table>
+      </div>
+    </div>
+
+    <!-- 订阅 -->
+    <div data-tab="subs" class="hidden">
+      <div class="card"><h3>可购套餐(积分购买)</h3><table><thead><tr><th>名称</th><th>价格</th><th>时长</th><th></th></tr></thead><tbody id="p_list"></tbody></table></div>
+    </div>
+
+    <!-- 管理后台 -->
+    <div data-tab="admin" class="hidden">
+      <div class="grid">
+        <div class="card"><h3>建兑换码</h3>
+          <label>积分</label><input id="ac_pts" type="number" value="100" />
+          <label>可用次数</label><input id="ac_max" type="number" value="10" />
+          <div style="margin-top:12px"><button onclick="adminCreateCode()">生成</button></div>
+          <div id="ac_out" class="mono" style="margin-top:8px"></div>
+        </div>
+        <div class="card"><h3>建套餐</h3>
+          <label>名称 / code</label><div class="row"><input id="ap_name" placeholder="Pro" style="flex:1"/><input id="ap_code" placeholder="pro" style="flex:1"/></div>
+          <label>价格(积分) / 天数</label><div class="row"><input id="ap_price" type="number" value="50" style="flex:1"/><input id="ap_days" type="number" value="30" style="flex:1"/></div>
+          <div style="margin-top:12px"><button onclick="adminCreatePlan()">创建</button></div>
+        </div>
+        <div class="card"><h3>建 Provider(上游账号池)</h3>
+          <label>kind</label><input id="pv_kind" value="claude_console" />
+          <label>名称 / base_url</label><div class="row"><input id="pv_name" placeholder="pool-1" style="flex:1"/><input id="pv_url" placeholder="https://..." style="flex:1"/></div>
+          <div style="margin-top:12px"><button onclick="adminCreateProvider()">添加</button></div>
+        </div>
+        <div class="card"><h3>建模型别名</h3>
+          <label>别名 / kind</label><div class="row"><input id="ma_alias" placeholder="claude-sonnet-4" style="flex:1"/><input id="ma_kind" value="claude_console" style="flex:1"/></div>
+          <label>上游真实模型名</label><input id="ma_up" placeholder="claude-sonnet-4-..." />
+          <div style="margin-top:12px"><button onclick="adminCreateAlias()">添加</button></div>
+        </div>
+        <div class="card" style="grid-column:1/-1"><h3>Providers</h3><table><thead><tr><th>kind</th><th>名称</th><th>base_url</th><th>健康</th></tr></thead><tbody id="pv_list"></tbody></table></div>
+        <div class="card" style="grid-column:1/-1"><h3>模型别名</h3><table><thead><tr><th>别名</th><th>kind</th><th>上游模型</th></tr></thead><tbody id="ma_list"></tbody></table></div>
+        <div class="card" style="grid-column:1/-1"><h3>用户</h3><table><thead><tr><th>id</th><th>邮箱</th><th>角色</th></tr></thead><tbody id="u_list"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- OIDC -->
+    <div data-tab="oidc" class="hidden">
+      <div class="card"><h3>OIDC 提供方</h3>
+        <div class="row"><button onclick="oidcToken()">签发 id_token</button><a id="oidc_disc" href="#" target="_blank" class="muted">discovery</a><a id="oidc_jwks" href="#" target="_blank" class="muted">jwks</a></div>
+        <pre id="oidc_out" style="margin-top:10px">点上面按钮签发一个 RS256 id_token</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const api = () => $('#api').value.replace(/\/$/,'');
+let TOKEN = localStorage.getItem('px_token') || '';
+let ROLE = localStorage.getItem('px_role') || '';
+
+function toast(msg, kind='') { const t=$('#toast'); t.textContent=msg; t.className='show '+kind; setTimeout(()=>t.className='',2200); }
+async function call(path, {method='GET', body, auth=true}={}) {
+  const h = {'Content-Type':'application/json'};
+  if (auth && TOKEN) h['Authorization'] = 'Bearer '+TOKEN;
+  const r = await fetch(api()+path, {method, headers:h, body: body?JSON.stringify(body):undefined});
+  let data=null; try{ data=await r.json(); }catch(e){}
+  if (!r.ok) throw Object.assign(new Error((data&&(data.error?.message||data.error||JSON.stringify(data)))||r.status), {status:r.status, data});
+  return data;
+}
+
+// ── auth ──
+async function login() {
+  try { const d = await call('/auth/login', {method:'POST', auth:false, body:{email:$('#li_email').value, password:$('#li_pw').value}});
+    TOKEN=d.token; ROLE=d.user.role; localStorage.setItem('px_token',TOKEN); localStorage.setItem('px_role',ROLE); enter(d.user.email); toast('登录成功','ok');
+  } catch(e){ toast('登录失败：'+e.message,'err'); }
+}
+async function register() {
+  try { await call('/auth/register', {method:'POST', auth:false, body:{email:$('#rg_email').value, password:$('#rg_pw').value}}); toast('注册成功,去登录','ok'); $('#li_email').value=$('#rg_email').value;
+  } catch(e){ toast('注册失败：'+e.message,'err'); }
+}
+function logout(){ TOKEN=''; ROLE=''; localStorage.clear(); location.reload(); }
+
+function enter(email){
+  $('#auth').classList.add('hidden'); $('#app').classList.remove('hidden'); $('#logout').classList.remove('hidden');
+  $('#who').textContent = email + (ROLE==='admin'?' ·管理员':'');
+  buildTabs(); showTab('overview'); loadOverview();
+}
+function buildTabs(){
+  const tabs=[['overview','概览'],['keys','API Keys'],['subs','订阅'],['oidc','OIDC']];
+  if(ROLE==='admin') tabs.push(['admin','管理后台']);
+  $('#tabs').innerHTML = tabs.map(([k,n])=>`<button data-k="${k}" onclick="showTab('${k}')">${n}</button>`).join('');
+}
+function showTab(k){
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.k===k));
+  document.querySelectorAll('[data-tab]').forEach(d=>d.classList.toggle('hidden', d.dataset.tab!==k));
+  if(k==='subs') loadPlans(); if(k==='keys') loadKeys(); if(k==='admin') loadAdmin();
+  if(k==='oidc'){ $('#oidc_disc').href=api()+'/.well-known/openid-configuration'; $('#oidc_jwks').href=api()+'/oidc/jwks'; }
+}
+
+// ── overview ──
+async function loadOverview(){
+  try {
+    const me = await call('/me');
+    $('#m_points').innerHTML = (me.points ?? 0) + ' <small>积分</small>';
+    $('#m_acct').innerHTML = `#${me.id}<br>${me.email}<br><span class="pill ${me.role==='admin'?'admin':''}">${me.role}</span>`;
+    const s = await call('/subscriptions');
+    $('#m_subs').innerHTML = s.active.length ? s.active.map(x=>`<span class="pill ok">plan ${x.plan_id} · lv${x.level} · 到期 ${(''+x.expires_at).slice(0,10)}</span>`).join(' ') : '<span class="muted">无活跃订阅</span>';
+  } catch(e){ toast(e.message,'err'); if(e.status===401) logout(); }
+}
+async function redeem(){
+  try{ const d=await call('/redeem',{method:'POST',body:{code:$('#rd_code').value}}); toast('兑换成功,余额 '+(d.balance??''),'ok'); $('#rd_code').value=''; loadOverview(); }
+  catch(e){ toast('兑换失败：'+e.message,'err'); }
+}
+
+// ── keys ──
+async function loadKeys(){
+  try{ const d=await call('/api-keys'); $('#k_list').innerHTML = d.data.map(k=>`<tr><td>${k.name||''}</td><td class="mono">${k.prefix||''}</td><td>${k.active?'<span class="pill ok">active</span>':'<span class="pill off">停用</span>'}</td><td>${k.active?`<button class="ghost sm" onclick="deactKey(${k.id})">停用</button>`:''}</td></tr>`).join('') || '<tr><td colspan=4 class="muted">暂无</td></tr>'; }catch(e){ toast(e.message,'err'); }
+}
+async function createKey(){
+  try{ const d=await call('/api-keys',{method:'POST',body:{name:$('#k_name').value||'default'}}); $('#k_new').innerHTML=`新 key(仅此一次显示):<br><b class="mono">${d.key}</b>`; $('#k_name').value=''; loadKeys(); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function deactKey(id){ try{ await call('/api-keys/'+id+'/deactivate',{method:'POST'}); loadKeys(); toast('已停用','ok'); }catch(e){ toast(e.message,'err'); } }
+
+// ── subs ──
+async function loadPlans(){
+  try{ const d=await call('/subscriptions'); $('#p_list').innerHTML = d.plans.map(p=>`<tr><td>${p.name}</td><td>${p.price} 积分</td><td>${p.duration_days} 天</td><td><button class="sm" onclick="subscribe(${p.id})">购买</button></td></tr>`).join('') || '<tr><td colspan=4 class="muted">暂无套餐</td></tr>'; }catch(e){ toast(e.message,'err'); }
+}
+async function subscribe(id){ try{ const d=await call('/subscriptions',{method:'POST',body:{plan_id:id}}); toast('购买成功,余额 '+(d.balance??''),'ok'); loadOverview(); }catch(e){ toast('购买失败：'+e.message,'err'); } }
+
+// ── admin ──
+async function loadAdmin(){
+  try{ const p=await call('/admin/providers'); $('#pv_list').innerHTML=p.data.map(x=>`<tr><td>${x.kind}</td><td>${x.name}</td><td class="mono muted">${x.base_url||''}</td><td>${x.healthy?'<span class="pill ok">✓</span>':'<span class="pill off">×</span>'}</td></tr>`).join('')||'<tr><td colspan=4 class="muted">暂无</td></tr>';
+    const a=await call('/admin/model-aliases'); $('#ma_list').innerHTML=a.data.map(x=>`<tr><td>${x.alias}</td><td>${x.kind}</td><td class="mono muted">${x.upstream_model||''}</td></tr>`).join('')||'<tr><td colspan=3 class="muted">暂无</td></tr>';
+    const u=await call('/admin/users'); $('#u_list').innerHTML=u.data.map(x=>`<tr><td class="mono">${x.id}</td><td>${x.email||''}</td><td><span class="pill ${x.role==='admin'?'admin':''}">${x.role}</span></td></tr>`).join('');
+  }catch(e){ toast(e.message,'err'); }
+}
+async function adminCreateCode(){ try{ const d=await call('/admin/redemption-codes',{method:'POST',body:{name:'ui',points:+$('#ac_pts').value,max_uses:+$('#ac_max').value}}); $('#ac_out').innerHTML='新码:<b>'+d.code+'</b>'; toast('已生成','ok'); }catch(e){ toast(e.message,'err'); } }
+async function adminCreatePlan(){ try{ await call('/admin/subscription-plans',{method:'POST',body:{name:$('#ap_name').value,code:$('#ap_code').value,price:+$('#ap_price').value,duration_days:+$('#ap_days').value}}); toast('套餐已建','ok'); loadPlans(); }catch(e){ toast(e.message,'err'); } }
+async function adminCreateProvider(){ try{ await call('/admin/providers',{method:'POST',body:{kind:$('#pv_kind').value,name:$('#pv_name').value,base_url:$('#pv_url').value||null,weight:10}}); toast('provider 已加','ok'); loadAdmin(); }catch(e){ toast(e.message,'err'); } }
+async function adminCreateAlias(){ try{ await call('/admin/model-aliases',{method:'POST',body:{alias:$('#ma_alias').value,kind:$('#ma_kind').value,upstream_model:$('#ma_up').value||null,priority:1}}); toast('别名已加','ok'); loadAdmin(); }catch(e){ toast(e.message,'err'); } }
+
+// ── oidc ──
+async function oidcToken(){ try{ const d=await call('/oidc/token',{method:'POST'}); $('#oidc_out').textContent=JSON.stringify(d,null,2); toast('已签发 id_token','ok'); }catch(e){ toast(e.message,'err'); } }
+
+// 自动进入(有 token)
+if (TOKEN) { call('/me').then(me=>enter(me.email)).catch(()=>logout()); }
+</script>
+</body>
+</html>
