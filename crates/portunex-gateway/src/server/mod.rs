@@ -22,11 +22,11 @@ pub fn build_router(state: AppState) -> Router {
         .merge(crate::routes::admin::routes())    // /admin/*
         .merge(crate::routes::models::routes())   // /v1/models
         .merge(crate::routes::subscription::routes()) // /subscriptions /admin/subscription-plans
+        .merge(crate::routes::messages::routes()) // /messages(Anthropic 转发)
         // 未实现(需上游凭据或后续实现)—— 501 桩
         .route("/v1/chat/completions", post(not_impl))
         .route("/v1/responses", post(not_impl))
         .route("/responses", post(not_impl))
-        .route("/messages", post(not_impl))
         .route("/messages/count_tokens", post(not_impl))
         .route("/v1beta/{*rest}", post(not_impl))
         .route("/oauth/claude/start", post(not_impl))

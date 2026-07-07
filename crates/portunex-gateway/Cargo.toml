@@ -27,3 +27,4 @@ config = { workspace = true }
 jsonwebtoken = { workspace = true }
 uuid = { workspace = true }
 portunex-db = { path = "../portunex-db" }
+portunex-upstream = { path = "../portunex-upstream" }

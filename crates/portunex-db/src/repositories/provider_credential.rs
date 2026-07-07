@@ -1,3 +1,12 @@
-// portunex-db/src/repositories/provider_credential.rs
-// [重建骨架] 该模块在原二进制中存在(路径痕迹),逻辑不可见,待实现。
-// TODO: 按 RECONSTRUCTION_BLUEPRINT.md 中本模块的职责与 API 契约填充。
+//! provider 凭据仓库(上游认证 secret)。
+use sqlx::PgPool;
+pub struct ProviderCredentialRepo;
+impl ProviderCredentialRepo {
+    /// 取该 provider 的一条凭据 -> (auth_type, secret)。
+    pub async fn find_for_provider(pool: &PgPool, provider_id: i64) -> sqlx::Result<Option<(String, String)>> {
+        let row: Option<(Option<String>, Option<String>)> = sqlx::query_as(
+            "SELECT auth_type, secret FROM provider_credentials WHERE provider_id = $1 AND deleted_at IS NULL ORDER BY id LIMIT 1")
+            .bind(provider_id).fetch_optional(pool).await?;
+        Ok(row.map(|(a, s)| (a.unwrap_or_else(|| "api_key".into()), s.unwrap_or_default())))
+    }
+}

@@ -7,3 +7,4 @@ pub mod provider;
 pub mod model_alias;
 pub mod subscription;
 pub mod usage;
+pub mod provider_credential;
