@@ -29,3 +29,5 @@ uuid = { workspace = true }
 portunex-db = { path = "../portunex-db" }
 portunex-upstream = { path = "../portunex-upstream" }
 portunex-core = { path = "../portunex-core" }
+rsa = "0.9"
+base64 = "0.22"

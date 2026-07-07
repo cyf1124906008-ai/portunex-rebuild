@@ -24,6 +24,7 @@ pub fn build_router(state: AppState) -> Router {
         .merge(crate::routes::subscription::routes()) // /subscriptions /admin/subscription-plans
         .merge(crate::routes::messages::routes()) // /messages(Anthropic 转发)
         .merge(crate::routes::chat::routes()) // /v1/chat/completions
+        .merge(crate::routes::oidc::routes()) // OIDC 提供方
         // 未实现(需上游凭据或后续实现)—— 501 桩
         .route("/v1/responses", post(not_impl))
         .route("/responses", post(not_impl))
@@ -33,8 +34,6 @@ pub fn build_router(state: AppState) -> Router {
         .route("/oauth/openai/start", post(not_impl))
         .route("/oauth/gemini/start", post(not_impl))
         .route("/oauth/antigravity/start", post(not_impl))
-        .route("/.well-known/openid-configuration", axum::routing::get(not_impl))
-        .route("/oidc/token", post(not_impl))
         .layer(cors)
         .with_state(state)
 }

@@ -1,3 +1,10 @@
-// portunex-gateway/src/routes/oidc.rs
-// [重建骨架] 该模块在原二进制中存在(路径痕迹),逻辑不可见,待实现。
-// TODO: 按 RECONSTRUCTION_BLUEPRINT.md 中本模块的职责与 API 契约填充。
+use axum::{routing::{get, post}, Router};
+use crate::handlers::oidc;
+use crate::state::AppState;
+pub fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/.well-known/openid-configuration", get(oidc::discovery))
+        .route("/oidc/jwks", get(oidc::jwks))
+        .route("/oidc/token", post(oidc::token))
+        .route("/oidc/userinfo", get(oidc::userinfo))
+}

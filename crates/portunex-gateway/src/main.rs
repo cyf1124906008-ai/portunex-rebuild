@@ -7,6 +7,7 @@ mod config;
 mod handlers;
 mod middleware;
 mod routes;
+mod services;
 mod server;
 mod state;
 mod util;
